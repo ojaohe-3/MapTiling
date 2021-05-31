@@ -21,7 +21,6 @@ def generate_polygon():
             for poly in x:
                 for p in poly:
                     dt.append(p)
-                    print(getPixel(p[0], p[1], 512))
                 res.append(dt)
                 dt = []
     
@@ -73,8 +72,8 @@ def get_polyfill(poly):
 
 # import matplotlib.pyplot as plt
 
-data = generate_polygon()
-get_polyfill(data[0])
+# data = generate_polygon()
+# get_polyfill(data[0])
 # plt.figure(None, (5, 5))
 # x, y = zip(*get_polyfill(example))
 # plt.scatter(x, y)

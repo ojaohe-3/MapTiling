@@ -1,1 +1,6 @@
 img
+.vscode
+obj
+test.*
+trainingDataFields.*
+api
