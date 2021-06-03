@@ -4,3 +4,6 @@ obj
 test.*
 trainingDataFields.*
 api
+data
+img1
+files.txt

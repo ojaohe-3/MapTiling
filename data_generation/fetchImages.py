@@ -10,7 +10,7 @@ async def writeToFile(fn,x,y, session):
     url = f'https://api.mapbox.com/v4/mapbox.satellite/15/{x}/{y}@2x.pngraw?access_token={API}'
     async with session.get(url) as res: 
         if res.status == 200:
-            f = await aiofiles.open('./img/'+fn, mode='wb')
+            f = await aiofiles.open(fn, mode='wb')
             await f.write(await res.read())
             await f.close()
             return 1
@@ -24,7 +24,7 @@ async def fetch_all(data, session):
     i = 10000
     for _ in tqdm(range(i)):
             x,y = data[int(np.random.uniform()*len(data))]
-            status = await writeToFile('{}.{}.png'.format(x,y),x,y, session)
+            status = await writeToFile('./img/{}.{}.png'.format(x,y),x,y, session)
             i -= 1
             if i <= 0 or status == -1:
                 print(f"last request done, {x},{y}")
@@ -50,7 +50,9 @@ def start_background_loop(loop: asyncio.AbstractEventLoop) -> None:
     asyncio.set_event_loop(loop)
     loop.run_forever()
 
-
+async def fetch_single(x,y,prefix):
+    async with aiohttp.ClientSession() as session:
+        status = await writeToFile(f'{prefix}/{x}.{y}.png',x,y, session)
 
 async def fetch_all_session(data, loop):
     async with aiohttp.ClientSession() as session:
@@ -59,21 +61,9 @@ async def fetch_all_session(data, loop):
         tasks = [loop.create_task(fetch_all(regions[i], session)) for i in range(24)]
         _ = await asyncio.gather(*tasks)
 
-
 if __name__ == '__main__' :
     data = generate_polygon()
     data = get_polyfill(data[-1])
-    # th_executor = concurrent.futures.ThreadPoolExecutor(max_workers=8)
-    # pr_executor = concurrent.futures.ProcessPoolExecutor(max_workers=4)
-
-    # event_loop = asyncio.get_event_loop()
-    # try:
-    #     event_loop.run_until_complete(
-    #         execution_functor(data, pr_executor)
-    #     )
-    # finally:
-    #     event_loop.close()
-    # asyncio.run(fetch_all(data))
     loop = asyncio.new_event_loop()
     t = Thread(target=start_background_loop, args=(loop,), daemon=True)
     t.start()
