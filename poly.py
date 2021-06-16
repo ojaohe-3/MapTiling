@@ -41,9 +41,30 @@ def ytile(lat):
     return int(n * (1-np.log(np.tan(rad) + (1/np.cos(rad)))/np.pi)/2)
 
 def getPixel(lon, lat, size):
-    rad = np.deg2rad(lat)
-    res = np.array([ (n * ((lon+180)/360) - xtile(lon)),  (n * (1-np.log(np.tan(rad) + (1/np.cos(rad)))/np.pi)/2 - ytile(lat))])
-    return np.round(res * size)
+    x = xtile(lon)
+    y = ytile(lat)
+
+    x0,y0 = num2deg(x,y)
+    x1,y1 = num2deg(x+1,y+1)
+
+    ux = np.array([x1-x0,0])
+    uy = np.array([0,y1-y0])
+    
+
+    res = np.array([(1/(np.linalg.norm(ux)))*(lon - x0), (1/(np.linalg.norm(uy)))*(lat - y1)])
+
+
+    # find the unit vector of lon/lan then project up to img size, this is naive, because lon, lat is not euclidian
+    return np.round(res*size)
+    
+   
+def num2deg(x, y):
+  lon_deg = x / n * 360.0 - 180.0
+  lat_rad = np.arctan(np.sinh(np.pi * (1 - 2 * y / n)))
+  lat_deg = np.rad2deg(lat_rad)
+  return (lon_deg, lat_deg)
+
+   
 
 
 def get_polyfill(poly):
