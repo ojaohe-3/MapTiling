@@ -16,7 +16,7 @@ def worker(data):
         # print('added object!')
     with open(f'./obj/{_id}.dump', 'wb') as f:
         pickle.dump(objs,f)
-        print(f'{_id} added')
+        # print(f'{_id} added')
 
 class FarmObject:
     """
@@ -35,9 +35,12 @@ class FarmObject:
                     key = f'{x}.{y}'
 
                     if(key in self.regions):
-                        self.regions[key] = np.concatenate((self.regions[key], [pix]))
+                        if self.regions[key].shape == (2,):
+                            self.regions[key] = np.stack((self.regions[key], pix))
+                        else:
+                            self.regions[key] = np.concatenate((self.regions[key], [pix]))
                     else:
-                        self.regions[key] = [pix]
+                        self.regions[key] = pix
             # if the json parses bad data, and adds a extra 0 value
             elif len(p[0]) == 3:
                 for lon,lat,_ in p:
@@ -47,7 +50,10 @@ class FarmObject:
                     key = f'{x}.{y}'
 
                     if(key in self.regions):
-                        self.regions[key] = np.concatenate((self.regions[key], [pix]))
+                        if self.regions[key].shape == (2,):
+                            self.regions[key] = np.stack((self.regions[key], pix))
+                        else:
+                            self.regions[key] = np.concatenate((self.regions[key], [pix]))
                     else:
                         self.regions[key] = pix
 
@@ -63,7 +69,7 @@ class FarmObject:
         intr_r1 = []
         intr_r2  = []
         for pos, ps in self.regions.items():
-            if pos != pos0:
+            if pos != pos0 and ps.shape != (2,):
                 x, y = pos.split('.')
                 x = int(x)
                 y = int(y)
@@ -73,16 +79,12 @@ class FarmObject:
                 r1, r2 = self.bound_intersection(points, ps, dx, dy, (256, 256))
                 intr_r1.append(r1)
                 intr_r2.append(r2)
-
+                
                 for p in intr_r2:
-                    self.regions[pos] = np.concatenate((self.regions[pos], [p]))
+                    self.regions[pos] = np.concatenate((self.regions[pos], p))
         for p in intr_r1:
-            self.regions[pos0] = np.concatenate((self.regions[pos], [p]))
-                # for pos1 in points:
-                #     for pos2 in ps:
-                #         r1, r2 = self.bound_intersection(pos1, pos2, dx, dy, (256,256))
-                #         intr_r1.append(r1)
-                #         intr_r2.append(r2)
+            self.regions[pos0] = np.concatenate((self.regions[pos0], p))
+
 
 
     def bound_intersection(self, box1, box2, dx, dy,bounds):
@@ -111,7 +113,7 @@ class FarmObject:
             if dy > 0:
                 return np.array([[min_x, h], [max_x, h]]), np.array([[min_x1, 0], [max_x1, 0]])
             else:
-                return np.array([[min_x, 0], [(max_x, 0)]]), np.array([[min_x1, h],[max_x1, h]])
+                return np.array([[min_x, 0], [max_x, 0]]), np.array([[min_x1, h],[max_x1, h]])
         elif dy == 0:
             max_y = np.max(box1[:,1])
             min_y = np.min(box1[:,1])
@@ -142,7 +144,7 @@ class FarmObject:
 
 
 def main():
-    print('loading large traningset')
+    print('loading large json')
     t = time()
     with open('trainingDataFields.json') as f:
         data = json.load(f)
@@ -152,20 +154,20 @@ def main():
 
     regions = [data[i:i + n] for i in range(0, len(data), n)]
 
-    worker(regions[0])
-    # with ProcessPoolExecutor(max_workers = 8) as pool:
+    # worker(regions[0])
+    with ProcessPoolExecutor(max_workers = 8) as pool:
         
-    #     futures = [pool.submit(worker, region) for region in regions]
-    #     kwargs = {
-    #     'total': len(futures),
-    #     'unit': 'it',
-    #     'unit_scale': True,
-    #     'leave': True
-    #     }
+        futures = [pool.submit(worker, region) for region in regions]
+        kwargs = {
+        'total': len(futures),
+        'unit': 'it',
+        'unit_scale': True,
+        'leave': True
+        }
 
-    #     #Print out the progress as tasks complete
-    #     for f in tqdm(as_completed(futures), **kwargs):
-    #         pass
+        #Print out the progress as tasks complete
+        for f in tqdm(as_completed(futures), **kwargs):
+            pass
 
 def load_Obj(fn):
     with open(fn, 'rb') as f:
