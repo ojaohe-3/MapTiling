@@ -6,20 +6,29 @@ from poly import generate_polygon, get_polyfill
 from threading import Thread
 from tqdm import tqdm
 
-API = "pk.eyJ1Ijoiam9oYW5yaCIsImEiOiJja29lbmQ2NDgwZTJqMm9xcDZqbzJ4Z3VnIn0.6iYEscod0GHS9V7h_9uThQ"
+def get_api():
+    if os.path.isfile('./api'):
+        with open('./api', 'r') as f:
+            api = f.readline()
+        return api
+    else:
+        return None
 
 async def writeToFile(fn,x,y, session):
-    url = f'https://api.mapbox.com/v4/mapbox.satellite/15/{x}/{y}@1x.png32?access_token={API}'
-    async with session.get(url) as res: 
-        if res.status == 200:
-            f = await aiofiles.open(fn, mode='wb')
-            await f.write(await res.read())
-            await f.close()
-            return 1
-        elif res.status != 200 :
-            print(x,y, "failed to load! reason:", res.status)
-            return -1
-
+    API = get_api()
+    if API:
+        url = f'https://api.mapbox.com/v4/mapbox.satellite/15/{x}/{y}@1x.png32?access_token={API}'
+        async with session.get(url) as res: 
+            if res.status == 200:
+                f = await aiofiles.open(fn, mode='wb')
+                await f.write(await res.read())
+                await f.close()
+                return 1
+            elif res.status != 200 :
+                print(x,y, "failed to load! reason:", res.status)
+                return -1
+    else:
+        return -1
     
 async def fetch_all(data, file_path, session):
     for d in tqdm(data):

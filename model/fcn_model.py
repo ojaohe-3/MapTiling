@@ -5,7 +5,11 @@ from torchvision import models
 
 
 class FCN(nn.Module):
+    """ 
+    An attempt on a Fully Convolutional Network
+    idea was to identify farmlands by pixel using semantic segmentation, with a binary classifier
 
+    """
     def __init__(self,):
         super().__init__()
         # base net
@@ -16,7 +20,7 @@ class FCN(nn.Module):
         relu = nn.ReLU(inplace=True)
 
         # fcn net
-        self.classifier = nn.Conv2d(32, 1, kernel_size=1)
+        self.classifier = nn.Conv2d(32, 1, kernel_size=1) # this is 100% wrong
 
         self.fcn = nn.Sequential(
             relu,

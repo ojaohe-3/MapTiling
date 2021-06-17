@@ -2,7 +2,7 @@ img
 .vscode
 obj
 test.*
-test*
+test2.*
 trainingDataFields.*
 api
 data

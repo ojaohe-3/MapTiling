@@ -89,15 +89,11 @@ def get_polyfill(poly):
 
 
 
+if __name__ == '__main__' :
+    import matplotlib.pyplot as plt
 
-
-# import matplotlib.pyplot as plt
-
-# data = generate_polygon()
-# get_polyfill(data[0])
-# plt.figure(None, (5, 5))
-# x, y = zip(*get_polyfill(example))
-# plt.scatter(x, y)
-# x, y = zip(*example)
-# plt.plot(x, y, c="r")
-# plt.show()
+    data = generate_polygon()
+    x, y = zip(*get_polyfill(data[-1]))
+    plt.scatter(x, y)
+    # plt.plot(x, y, c="r")
+    plt.show()

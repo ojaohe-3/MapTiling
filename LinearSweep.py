@@ -21,7 +21,7 @@ def load_segment(seg) -> [FarmObject]:
     data = []
     for o in tqdm(seg):
         data.append(load_Obj('./obj/' + o))
-    print("segment loaded")
+    print(f"segment loaded {len(data[0])} farms ")
     return data
 
 def farm_object_procedure(farms): 
@@ -57,18 +57,18 @@ def sweeper(region):
     C = {}
     for farm in region: 
         for key, item in farm.regions.items():
-           
-            if key in C:
-                poly_fill = np.array(get_polyfill(item))
-                poly_fill = np.clip(poly_fill, 0, 255)
-                C[key].append(poly_fill)
-                nr += 1
-            elif (os.path.isfile(f'./data/train/{key}.np')):
-                poly_fill = np.array(get_polyfill(item))
-                poly_fill = np.clip(poly_fill, 0, 255)
-                C[key] = [poly_fill]
-                nr += 1
-    print(f'complimentary step, unloading {nr} files')
+            if farm.regions[key].shape != (2,): #ignore single point regions
+                if key in C:
+                    poly_fill = np.array(get_polyfill(item))
+                    poly_fill = np.clip(poly_fill, 0, 255)
+                    C[key].append(poly_fill)
+                    nr += 1
+                elif (os.path.isfile(f'./data/train/{key}.np')):
+                    poly_fill = np.array(get_polyfill(item))
+                    poly_fill = np.clip(poly_fill, 0, 255)
+                    C[key] = [poly_fill]
+                    nr += 1
+    print(f'complimentary step, unloading {nr} to files')
     for key , poly_fills in C.items():
         intr_label = np.zeros((256,256))      
         with open(f'./data/train/{key}.np', 'rb') as f:
@@ -82,15 +82,17 @@ def sweeper(region):
         label = label.clip(0,1)
         with open(f'./data/train/{key}.np', 'wb')as f:
             np.save(f, label)
-    print(f'segment completed, {nr} segments complemented!')
+    print(f'segment completed, {nr} segments modified!')
 
 
 def sweep_procedure(farms):
     farms = [farm for obj in farms for farm in obj] # flatten
     n = int(len(farms)/120)
     regions = [farms[i:i + n] for i in range(0, len(farms), n)]
-    with ProcessPoolExecutor(max_workers=8) as executor:
-        executor.map(sweeper, regions)
+    for region in regions:
+        sweeper(region)
+    # with ProcessPoolExecutor(max_workers=8) as executor:
+    #     executor.map(sweeper, regions)
 
 
 
@@ -110,12 +112,13 @@ def generate_data(start, end):
 
 
 def main():
-    segments = list(range(0, len(flist), 4))
+    segments = list(range(0, len(flist), 10))
     segments = [[segments[i-1], d]
                 for i, d in enumerate(segments) if i != 0]  # split into ranges
-    # generate_data(3, 4)
+    s, e  = segments[0]
+    generate_data(s,e)
 
-    for start, end in segments:
+    for start, end in segments[:1]:
         process_segment(start,end)
         # breaks
 
